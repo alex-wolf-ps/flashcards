@@ -1,0 +1,51 @@
+﻿@page "/"
+@inject HttpClient client;
+
+<PageTitle>Flash Cards</PageTitle>
+
+<h1>Flash Cards</h1>
+
+<div class="row">
+    <div class="col-lg-4">
+        <InputSelect class="form-select mb-3" @bind-Value="SelectedLanguage">
+            <option value="en">English</option>
+            <option value="de">German</option>
+            <option value="es">Spanish</option>
+        </InputSelect>
+        <br />
+        <div>Vocab word: @CurrentWord</div>
+        <hr />
+        <div>Translation: @TranslatedWord</div>
+        <br />
+        <button class="btn btn-primary" @onclick="Translate">Translate</button>
+        <button class="btn btn-secondary float-end" @onclick="NextWord">Next</button>
+    </div>
+</div>
+
+@code {
+    List<string> Words = new List<string>() { "Apple", "Orange", "Pear" };
+    public string SelectedLanguage { get; set; } = "en";
+
+    public string CurrentWord { get; set; } = String.Empty;
+    public string TranslatedWord { get; set; } = String.Empty;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Words = await client.GetFromJsonAsync<List<string>>("/words");
+
+        NextWord();
+    }
+
+    public async Task Translate()
+    {
+        TranslatedWord = await client.GetStringAsync(
+            $"/translate?targetLanguage={SelectedLanguage}&Word={CurrentWord}");
+    }
+
+    public void NextWord()
+    {
+        TranslatedWord = String.Empty;
+        int num = new Random().Next(0, Words.Count);
+        CurrentWord = Words[num];
+    }
+}
